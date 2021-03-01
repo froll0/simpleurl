@@ -1,6 +1,6 @@
 /*
- * Fast URL access by @froll0
- */
+     * Fast URL access
+     */
 class SimpleURL {
     constructor(url) {
         try {
@@ -84,7 +84,7 @@ class SimpleURL {
 
     /*
      * Add params to url
-     * params = Object || String
+     * params = Object
      */
     add(params) {
         var hrefUrl = new URL(this.href);
@@ -101,8 +101,8 @@ class SimpleURL {
     }
 
     /*
-     * Remove params to url
-     * params = Object || String
+     * Remove params from url
+     * params = Array || String
      */
     remove(params) {
         params = SimpleURL.#objToArray(params);

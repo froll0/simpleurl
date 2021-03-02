@@ -1,6 +1,6 @@
 /*
-     * Fast URL access
-     */
+* Fast URL access
+*/
 class SimpleURL {
     constructor(url) {
         try {
@@ -8,13 +8,11 @@ class SimpleURL {
                 this.location = new URL(url);
             }
             else if (!url) {
-                this.location = window.location;
+                this.location = new URL(window.location);
             }
-
-            this.href = this.location.href;
         }
         catch (e) {
-            SimpleURL.#error("url {" + url + ": " + SimpleURL.#varType(url) + "} invalid!");
+            SimpleURL.#error("invalid", {variableName: "url", variableType: "string", value: url});
         }
     }
 
@@ -43,7 +41,23 @@ class SimpleURL {
     /*
      * Simple error manage
      */
-    static #error(errorMsg) {
+    static #error(type, extra) {
+        var errorMsg;
+
+        switch (type) {
+            case "invalid":
+                errorMsg = extra.variableName + "(" + extra.variableType + ")" + " {" + extra.value + ": " + SimpleURL.#varType(extra.value) + "} invalid!";
+                break;
+
+            case "custom":
+                errorMsg = extra;
+                break;
+
+            default:
+                errorMsg = "Generic error";
+                break;
+        }
+
         try {
             throw new Error(errorMsg);
         }
@@ -55,7 +69,7 @@ class SimpleURL {
     }
 
     /*
-     * Class function
+     * Class methods
      */
 
     /*
@@ -87,17 +101,15 @@ class SimpleURL {
      * params = Object
      */
     add(params) {
-        var hrefUrl = new URL(this.href);
-
         if (SimpleURL.#varType(params) !== 'Object' || params === null) {
-            SimpleURL.#error("params {" + params + ": " + SimpleURL.#varType(params) + "} is a required object.");
+            SimpleURL.#error("invalid", {variableName: "params", variableType: "object", value: params});
         }
 
         for (var param in params) {
-            hrefUrl.searchParams.append(param, params[param]);
+            this.location.searchParams.append(param, params[param]);
         }
 
-        return hrefUrl.href;
+        return this;
     }
 
     /*
@@ -107,18 +119,43 @@ class SimpleURL {
     remove(params) {
         params = SimpleURL.#objToArray(params);
 
-        var hrefUrl = new URL(this.href);
-
         if (SimpleURL.#varType(params) === 'Array') {
             params.forEach(function(param) {
-                hrefUrl.searchParams.delete(param);
+                this.location.searchParams.delete(param);
             });
         }
         else {
-            hrefUrl.searchParams.delete(params);
+            this.location.searchParams.delete(params);
         }
 
-        return hrefUrl.href;
+        return this;
+    }
+
+    /*
+     * Remove old selected params and add new params
+     * paramsRemove = Array || String
+     * paramsAdd = Object
+     */
+    replace(paramsRemove, paramsAdd) {
+        this.remove(paramsRemove).add(paramsAdd);
+        return this;
+    }
+
+    /*
+     * Change param's values
+     * If not found, it is added
+     * params = Object
+     */
+    change(params) {
+        if (SimpleURL.#varType(params) !== 'Object' || params === null) {
+            SimpleURL.#error("invalid", {variableName: "params", variableType: "object", value: params});
+        }
+
+        for (var param in params) {
+            this.location.searchParams.set(param, params[param]);
+        }
+
+        return this;
     }
 
     /*
@@ -136,7 +173,7 @@ class SimpleURL {
             return buildedUrl.href;
         }
         else {
-            SimpleURL.#error("params {" + params + ": " + SimpleURL.#varType(params) + "} is a required object.");
+            SimpleURL.#error("invalid", {variableName: "params", variableType: "object", value: params});
         }
     }
 
@@ -144,9 +181,15 @@ class SimpleURL {
      * Remove all params from url
      */
     clean() {
-        var cleanedUrl = new URL(this.href);
-        cleanedUrl.search = "";
+        this.location.search = "";
 
-        return cleanedUrl.href;
+        return this;
+    }
+
+    /*
+     * Get compiled url
+     */
+    value() {
+        return this.location.href;
     }
 }
